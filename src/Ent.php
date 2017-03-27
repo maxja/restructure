@@ -31,10 +31,10 @@ class Ent extends Iterator
     public function __construct(array $structure)
     {
         parent::__construct($structure);
-
+/*
         foreach ($this as $key => $value) {
             $this->_anatomy[] = array_merge([$key], $value);
-        }
+        }*/
     }
 
     /**
@@ -42,15 +42,13 @@ class Ent extends Iterator
      *
      * @param callable $callback
      *
-     * @return \Generator
+     * @return $this
      */
     public function filter(callable $callback)
     {
-        foreach ($this->_anatomy as $tuple) {
-            if ($callback(...$tuple)) {
-                yield $tuple[0] => $tuple[1];
-            }
-        }
+        $this->resetFilters();
+        $this->addFilter($callback);
+        return $this;
     }
 
     /**

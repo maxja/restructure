@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace MXJ\Restructure;
 
@@ -25,6 +25,11 @@ class Iterator implements \Iterator
      * @var array
      */
     private $__collection;
+
+    /**
+     * @var array
+     */
+    private $__filters = [];
 
     /**
      * @var \Generator
@@ -108,7 +113,25 @@ class Iterator implements \Iterator
      */
     public function rewind()
     {
-        $this->__structure = self::traverse($this->__collection);
+        $this->__structure = self::traverse($this->__collection, 0, $this->__filters);
+    }
+
+    /**
+     * Add new filter to filter stack
+     *
+     * @param callable $filter
+     */
+    protected function addFilter(callable $filter)
+    {
+        $this->__filters[] = $filter;
+    }
+
+    /**
+     * Reset filters list
+     */
+    protected function resetFilters()
+    {
+        unset($this->__filters);
     }
 
     /**
@@ -116,21 +139,82 @@ class Iterator implements \Iterator
      *
      * @param array $collection
      * @param int   $level
+     * @param array $filters
      *
      * @return \Generator
      */
-    public static function &traverse(array &$collection, int $level = 0)
+    private static function &traverse(array &$collection, int $level = 0, array $filters)
     {
         foreach ($collection as $key => &$value) {
-            yield $key => [&$value, $level];
+            if ($filters !== []
+                && self::some($filters, function ($filter, $k, $v) {
+                    return !$filter($k, $v);
+                }, $key, $value)
+            ) {
+                continue;
+            }
+
+            yield $key => $value;
 
             if ((!~self::$max_depth || $level < self::$max_depth) && is_array($value)) {
-                foreach (self::traverse($value, $level + 1) as $k => &$v) {
+                foreach (self::traverse($value, $level + 1, $filters) as $k => $v) {
                     yield $k => $v;
                 }
             }
             unset($v, $k);
         }
         unset($value, $key);
+    }
+
+    private static function some(array $samples, callable $callback = null, ...$arguments): bool
+    {
+        if ($callback === null) {
+            $callback = function ($element, ...$arguments): bool {
+                if ($element instanceof \Closure) {
+                    return $element(...$arguments);
+                }
+
+                return !!$element;
+            };
+        }
+
+        foreach ($samples as $sample) {
+            if ($callback($sample, ...$arguments)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function every(array $samples, callable $callback = null, ...$arguments): bool
+    {
+        if ($callback === null) {
+            $callback = function ($element, ...$arguments): bool {
+                if ($element instanceof \Closure) {
+                    return $element(...$arguments);
+                }
+
+                return !!$element;
+            };
+        }
+
+        foreach ($samples as $sample) {
+            if (!$callback($sample, ...$arguments)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Return generator as array
+     *
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return iterator_to_array($this);
     }
 }
