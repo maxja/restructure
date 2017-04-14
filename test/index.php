@@ -1,7 +1,7 @@
 <?php
 declare(strict_types = 1);
 
-require __DIR__ . '../vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use MXJ\Restructure\Ent;
 
@@ -14,10 +14,46 @@ $arr = [
     ]
 ];
 
-$i = new Ent($arr);
+$arr2 = [
+    [
+        'name'     => 'Product One',
+        'currency' => [
+            [
+                'alpha' => 'USD',
+                'iso'   => '840',
+            ],
+            [
+                'alpha' => 'EUR',
+                'iso'   => '978',
+            ],
+        ],
+    ],
+    [
+        'name'     => 'Product Two',
+        'currency' => [
+            [
+                'alpha' => 'EUR',
+                'iso'   => '978',
+            ],
+        ],
+    ],
+    [
+        'name'     => 'Product Two',
+        'currency' => [
+            [
+                'alpha' => 'RUB',
+                'iso'   => '643',
+            ],
+            [
+                'alpha' => 'USD',
+                'iso'   => '840',
+            ],
+        ],
+    ],
+];
 
-foreach ($i->filter(function ($key, $value, $level) {
-    return $level === 2;
-}) as $key => $value) {
+$i = new Ent($arr2);
+
+foreach ($i->remap(['name']) as $key => $value) { //'currency' => ['iso', 'alpha'],
     var_dump($key, $value);
 }

@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace MXJ\Restructure;
 
@@ -11,18 +11,13 @@ namespace MXJ\Restructure;
  * ```
  *  $structure = new Ent($data);
  *  foreach ($structure as $node) { ... }
- *  
+ *
  *  $restructured = $structure->remap(['.path.to.key|value' => []]);
  *  foreach ($restructured as $node) { ... }
  * ```
  */
 class Ent extends Iterator
 {
-    /**
-     * @var array
-     */
-    protected $_anatomy;
-
     /**
      * Ent constructor.
      *
@@ -31,10 +26,6 @@ class Ent extends Iterator
     public function __construct(array $structure)
     {
         parent::__construct($structure);
-
-        foreach ($this as $key => $value) {
-            $this->_anatomy[] = array_merge([$key], $value);
-        }
     }
 
     /**
@@ -42,15 +33,13 @@ class Ent extends Iterator
      *
      * @param callable $callback
      *
-     * @return \Generator
+     * @return $this
      */
     public function filter(callable $callback)
     {
-        foreach ($this->_anatomy as $tuple) {
-            if ($callback(...$tuple)) {
-                yield $tuple[0] => $tuple[1];
-            }
-        }
+        $this->resetFilters();
+        $this->addFilter($callback);
+        return $this;
     }
 
     /**
@@ -63,5 +52,29 @@ class Ent extends Iterator
     public function find(...$attributes)
     {
 
+    }
+
+    /**
+     * Flatten tre structure to ...
+     *
+     * @param array $map
+     *
+     * @return array
+     */
+    public function flatten(array $map): array
+    {
+        $result = [];
+        foreach ($this as $item) {
+            $result[] = self::unfold($item);
+        }
+
+        return [];
+    }
+
+    private static function unfold($obj)
+    {
+        $properties = [];
+        $properties = static::toArray($obj);
+        return $properties;
     }
 }
