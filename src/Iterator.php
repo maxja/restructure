@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace MXJ\Restructure;
 
@@ -146,9 +146,11 @@ class Iterator implements \Iterator
     {
         foreach ($collection as $key => &$value) {
             if ($filters !== []
-                && self::some($filters, function ($filter, $k, $v) {
+                && self::some(
+                    $filters, function ($filter, $k, $v) {
                     return !$filter($k, $v);
-                }, $key, $value)
+                }, $key, $value
+                )
             ) {
                 continue;
             }
